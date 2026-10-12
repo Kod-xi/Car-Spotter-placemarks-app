@@ -1,6 +1,5 @@
-package org.setu.placemark.models
+package io.github.Kodxi.carspotterapp.details
 
-import androidx.annotation.experimental.Experimental
 import kotlinx.datetime.*
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
