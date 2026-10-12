@@ -1,6 +1,5 @@
-package org.setu.placemark.models
+package io.github.Kodxi.carspotterapp.details
 
-import java.util.concurrent.atomic.AtomicLong
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
