@@ -1,4 +1,7 @@
 package io.github.Kodxi.carspotterapp
 
-class AppData {
+import io.github.Kodxi.carspotterapp.details.CarStore
+
+object AppData {
+    val carStore = CarStore()
 }
