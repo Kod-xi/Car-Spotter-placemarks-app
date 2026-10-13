@@ -10,8 +10,8 @@ import kotlin.uuid.Uuid
 data class CarDetails(
     var id: Uuid = Uuid.random(),
     var brandModel: String = "",
-    var decription: String = "",
-    var dateSpotted: LocalDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
-    var x: Double = 0.0,
-    var y: Double = 0.0
+    var description: String = "",
+    var dateSpotted: LocalDate? = Clock.System.todayIn(TimeZone.currentSystemDefault()),
+    var x: Double? = 0.0,
+    var y: Double? = 0.0
 )

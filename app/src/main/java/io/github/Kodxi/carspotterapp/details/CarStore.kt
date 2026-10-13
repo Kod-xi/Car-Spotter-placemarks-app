@@ -21,7 +21,7 @@ class CarStore : IStore {
         val foundCar = findOne(car.id)
         return if (foundCar != null) {
             foundCar.brandModel = car.brandModel
-            foundCar.decription = car.decription
+            foundCar.description = car.description
             foundCar.dateSpotted = car.dateSpotted
             foundCar.x = car.x
             foundCar.y = car.y
