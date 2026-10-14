@@ -11,5 +11,6 @@ interface IStore {
     fun update(placemark: CarDetails): Boolean
     fun delete(id: Uuid): Boolean
     fun findOne(id: Uuid): CarDetails?
+    fun getSize(): Int
 
 }
