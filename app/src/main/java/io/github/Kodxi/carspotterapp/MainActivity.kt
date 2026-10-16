@@ -5,9 +5,13 @@ package io.github.Kodxi.carspotterapp
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import io.github.Kodxi.carspotterapp.ui.theme.CarSpotterAppTheme
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.toMutableStateList
+import androidx.compose.ui.Modifier
 import androidx.fragment.app.FragmentManager
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -24,44 +28,56 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
 
             CarSpotterAppTheme {
-                val cars = remember { AppData.carStore.findAll().toMutableStateList() }
-                NavHost(navController = navController, startDestination = "main"){
-                    composable("main") { CarSpotterMain(
-                        cars = cars,
-                        onAddCar = { navController.navigate("add") },
-                        onEditCar = { car -> navController.navigate("update/${car.id}") },
-                        onDeleteCar = {
-                            car ->
-                            if(AppData.carStore.delete(car.id)){
-                                cars.remove(car)
-                            }
 
-                        },
-                        onFindCar = {car -> navController.navigate("search") }
-                    )}
-                    composable("add") { CarSpotterAdd(
-                        onSave = {
-                            car -> AppData.carStore.create(car)
-                            cars.add(car)
-                            navController.navigate("main")
-                        },
-                        onReturn = {navController.navigate("main")}
-                    ) }
-                    composable("update/{carId}",
-                        arguments = listOf(navArgument("carId") { type = NavType.StringType })
-                    ) { backStackEntry ->
-                        val id = Uuid.parse(backStackEntry.arguments?.getString("carId")!!)
-                        val car = AppData.carStore.findOne(id)
-                        CarSpotterUpdate(
-                            car = car,
-                            onReturn = {navController.navigate("main")},
-                        )
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+
+                    val cars = remember { AppData.carStore.findAll().toMutableStateList() }
+                    NavHost(navController = navController, startDestination = "main") {
+                        composable("main") {
+                            CarSpotterMain(
+                                cars = cars,
+                                onAddCar = { navController.navigate("add") },
+                                onEditCar = { car -> navController.navigate("update/${car.id}") },
+                                onDeleteCar = { car ->
+                                    if (AppData.carStore.delete(car.id)) {
+                                        cars.remove(car)
+                                    }
+
+                                },
+                                onFindCar = { navController.navigate("search") }
+                            )
+                        }
+                        composable("add") {
+                            CarSpotterAdd(
+                                onSave = { car ->
+                                    AppData.carStore.create(car)
+                                    cars.add(car)
+                                    navController.navigate("main")
+                                },
+                                onReturn = { navController.navigate("main") }
+                            )
+                        }
+                        composable(
+                            "update/{carId}",
+                            arguments = listOf(navArgument("carId") { type = NavType.StringType })
+                        ) { backStackEntry ->
+                            val id = Uuid.parse(backStackEntry.arguments?.getString("carId")!!)
+                            val car = AppData.carStore.findOne(id)
+                            CarSpotterUpdate(
+                                car = car,
+                                onReturn = { navController.navigate("main") },
+                            )
+                        }
+                        composable("search") {
+                            CarSpotterSearch(
+                                onReturn = {navController.navigate("main")}
+                            )
+                        }
                     }
-                    composable("search") { CarSpotterSearch(
-
-                    ) }
                 }
-
             }
         }
     }

@@ -2,33 +2,31 @@
 
 package io.github.Kodxi.carspotterapp
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.ScrollableState
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.getSelectedDate
@@ -37,10 +35,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -61,11 +59,7 @@ import kotlin.uuid.Uuid
 @Composable
 fun CarSpotterAdd(onSave: (CarDetails) -> Unit, onReturn: () -> Unit) {
     Column(
-        modifier = Modifier.fillMaxSize()
-            .scrollable(
-                ScrollableState { 1f},
-                orientation = Orientation.Vertical
-            ),
+        modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Top
     ) {
         Text(
@@ -78,23 +72,29 @@ fun CarSpotterAdd(onSave: (CarDetails) -> Unit, onReturn: () -> Unit) {
             textAlign = TextAlign.Center,
             fontSize = 48.sp,
             fontWeight = FontWeight.Bold,
+            color = Color.Black
         )
 
         val brandModelState = rememberTextFieldState(initialText = "")
         val descriptionState = rememberTextFieldState(initialText = "")
         val datePickerState = rememberDatePickerState(
-            Clock.System.todayIn(TimeZone.currentSystemDefault()).toJavaLocalDate()
+            initialSelectedDate = Clock.System.todayIn(TimeZone.currentSystemDefault()).toJavaLocalDate(),
+            initialDisplayMode = DisplayMode.Input
         )
+        val xCoordState = rememberTextFieldState(initialText = "")
+        val yCoordState = rememberTextFieldState(initialText = "")
 
-        Box(
-            modifier = Modifier.padding(3.dp)
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
-                .shadow(2.dp)
-                .weight(1f)
+        Card(
+            Modifier.weight(1f)
+                .padding(5.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(MaterialTheme.colorScheme.background),
+            elevation = CardDefaults.cardElevation(2.dp)
         ){
             Column(
-                modifier = Modifier.padding(10.dp)
+                modifier = Modifier
+                    .padding(10.dp)
+                    .verticalScroll(rememberScrollState())
             ) {
                 Text(
                     text = "Brand / Model",
@@ -142,19 +142,60 @@ fun CarSpotterAdd(onSave: (CarDetails) -> Unit, onReturn: () -> Unit) {
                 DatePicker(
                     state = datePickerState,
                     showModeToggle = true,
-                    modifier = Modifier.padding(bottom = 5.dp)
+                    modifier = Modifier
+                        .padding(bottom = 5.dp)
                         .clip(RoundedCornerShape(28.dp)),
                 )
 
                 Text(
-                    text = "${datePickerState.getSelectedDate()}",
+                    text = "Location",
                     modifier = Modifier.padding(bottom = 5.dp),
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold
                 )
 
-                Row(){
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "X:",
+                        modifier = Modifier.padding(bottom = 5.dp, end = 5.dp),
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold
+                    )
 
+                    TextField(
+                        state = xCoordState,
+                        modifier = Modifier.padding(bottom = 5.dp, end = 5.dp)
+                            .weight(2f),
+                        lineLimits = TextFieldLineLimits.SingleLine,
+                        textStyle =
+                            TextStyle(
+                                fontSize = 22.sp,
+                            ),
+                        shape = RoundedCornerShape(48.dp),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                    )
+
+                    Text(
+                        text = "Y:",
+                        modifier = Modifier.padding(bottom = 5.dp, end = 5.dp),
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    TextField(
+                        state = yCoordState,
+                        modifier = Modifier.padding(bottom = 5.dp, end = 5.dp)
+                            .weight(2f),
+                        lineLimits = TextFieldLineLimits.SingleLine,
+                        textStyle =
+                            TextStyle(
+                                fontSize = 22.sp,
+                            ),
+                        shape = RoundedCornerShape(48.dp),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                    )
                 }
 
             }
@@ -170,14 +211,21 @@ fun CarSpotterAdd(onSave: (CarDetails) -> Unit, onReturn: () -> Unit) {
         ){
             IconButton(
                 onClick = {
-                    val newCar = CarDetails( brandModel = brandModelState.text.toString(), description = descriptionState.text.toString(), dateSpotted = datePickerState.getSelectedDate()?.toKotlinLocalDate() )
+                    val newCar = CarDetails(
+                        brandModel = brandModelState.text.toString(),
+                        description = descriptionState.text.toString(),
+                        dateSpotted = datePickerState.getSelectedDate()?.toKotlinLocalDate(),
+                        x = xCoordState.text.toString().toDoubleOrNull() ?: 0.0,
+                        y = yCoordState.text.toString().toDoubleOrNull() ?: 0.0
+                    )
                     onSave(newCar)
                 },
                 Modifier.weight(1f)
             ) {
                 Icon(
                     Icons.Filled.Check,
-                    contentDescription = "Check"
+                    contentDescription = "Check",
+                    tint = Color.Black
                 )
             }
 
@@ -189,7 +237,8 @@ fun CarSpotterAdd(onSave: (CarDetails) -> Unit, onReturn: () -> Unit) {
             ) {
                 Icon(
                     Icons.Filled.Clear,
-                    contentDescription = "Clear"
+                    contentDescription = "Clear",
+                    tint = Color.Black
                 )
             }
         }

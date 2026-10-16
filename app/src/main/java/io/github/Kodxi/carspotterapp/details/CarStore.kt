@@ -7,7 +7,7 @@ import kotlin.uuid.Uuid
 
 @OptIn(ExperimentalUuidApi::class)
 class CarStore : IStore {
-    private val cars = arrayListOf(CarDetails(brandModel = "Name", description = "Word word word"), CarDetails(brandModel = "Name2", description = "Word2 word2 word2"))
+    private val cars = ArrayList<CarDetails>()
 
     override fun findAll(): List<CarDetails> {
         return cars

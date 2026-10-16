@@ -22,20 +22,26 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -51,6 +57,7 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -72,11 +79,7 @@ import kotlin.uuid.Uuid
 @Composable
 fun CarSpotterUpdate(car: CarDetails?, onReturn: () -> Unit ) {
     Column(
-        modifier = Modifier.fillMaxSize()
-            .scrollable(
-                ScrollableState { 1f},
-                orientation = Orientation.Vertical
-            ),
+        modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Top
     ) {
         Text(
@@ -89,6 +92,7 @@ fun CarSpotterUpdate(car: CarDetails?, onReturn: () -> Unit ) {
             textAlign = TextAlign.Center,
             fontSize = 48.sp,
             fontWeight = FontWeight.Bold,
+            color = Color.Black
         )
 
         val brandModelState = rememberTextFieldState(initialText = car?.brandModel ?: "")
@@ -97,16 +101,19 @@ fun CarSpotterUpdate(car: CarDetails?, onReturn: () -> Unit ) {
             initialSelectedDate = car?.dateSpotted?.toJavaLocalDate() ?:
                 Clock.System.todayIn(TimeZone.currentSystemDefault()).toJavaLocalDate(),
         )
+        val xCoordState = rememberTextFieldState(initialText = car?.x.toString())
+        val yCoordState = rememberTextFieldState(initialText = car?.y.toString())
 
-        Box(
-            modifier = Modifier.padding(3.dp)
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
-                .shadow(2.dp)
-                .weight(1f)
+        Card(
+            Modifier.weight(1f)
+                .padding(5.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(MaterialTheme.colorScheme.background),
+            elevation = CardDefaults.cardElevation(2.dp)
         ){
             Column(
                 modifier = Modifier.padding(10.dp)
+                    .verticalScroll(rememberScrollState())
             ) {
                 Text(
                     text = "Brand / Model",
@@ -165,12 +172,51 @@ fun CarSpotterUpdate(car: CarDetails?, onReturn: () -> Unit ) {
                     fontWeight = FontWeight.Bold
                 )
 
-                Row(){
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "X:",
+                        modifier = Modifier.padding(bottom = 5.dp, end = 5.dp),
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    TextField(
+                        state = xCoordState,
+                        modifier = Modifier.padding(bottom = 5.dp, end = 5.dp)
+                            .weight(2f),
+                        lineLimits = TextFieldLineLimits.SingleLine,
+                        textStyle =
+                            TextStyle(
+                                fontSize = 22.sp,
+                            ),
+                        shape = RoundedCornerShape(48.dp),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                    )
+
+                    Text(
+                        text = "Y:",
+                        modifier = Modifier.padding(bottom = 5.dp, end = 5.dp),
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    TextField(
+                        state = yCoordState,
+                        modifier = Modifier.padding(bottom = 5.dp, end = 5.dp)
+                            .weight(2f),
+                        lineLimits = TextFieldLineLimits.SingleLine,
+                        textStyle =
+                            TextStyle(
+                                fontSize = 22.sp,
+                            ),
+                        shape = RoundedCornerShape(48.dp),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                    )
 
                 }
-
             }
-
         }
 
         Row(
@@ -182,7 +228,14 @@ fun CarSpotterUpdate(car: CarDetails?, onReturn: () -> Unit ) {
         ){
             IconButton(
                 onClick = {
-                    val updatedCar = CarDetails(car?.id ?: Uuid.random(), brandModelState.text.toString(), descriptionState.text.toString(), datePickerState.getSelectedDate()?.toKotlinLocalDate() )
+                    val updatedCar = CarDetails(
+                        id = car?.id ?: Uuid.random(),
+                        brandModel = brandModelState.text.toString(),
+                        description = descriptionState.text.toString(),
+                        dateSpotted = datePickerState.getSelectedDate()?.toKotlinLocalDate(),
+                        x = xCoordState.text.toString().toDoubleOrNull() ?: 0.0,
+                        y = yCoordState.text.toString().toDoubleOrNull() ?: 0.0
+                    )
                     AppData.carStore.update(updatedCar)
                     onReturn()
                 },
@@ -190,7 +243,8 @@ fun CarSpotterUpdate(car: CarDetails?, onReturn: () -> Unit ) {
             ) {
                 Icon(
                     Icons.Filled.Check,
-                    contentDescription = "Check"
+                    contentDescription = "Check",
+                    tint = Color.Black
                 )
             }
 
@@ -200,7 +254,8 @@ fun CarSpotterUpdate(car: CarDetails?, onReturn: () -> Unit ) {
             ) {
                 Icon(
                     Icons.Filled.Clear,
-                    contentDescription = "Clear"
+                    contentDescription = "Clear",
+                    tint = Color.Black
                 )
             }
         }

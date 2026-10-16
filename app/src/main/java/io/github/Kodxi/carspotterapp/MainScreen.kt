@@ -21,7 +21,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircle
@@ -33,8 +35,11 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DirectionsCarFilled
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -66,7 +71,7 @@ import kotlin.uuid.Uuid
 
 @OptIn(ExperimentalUuidApi::class)
 @Composable
-fun CarSpotterMain(cars: List<CarDetails>, onAddCar: () -> Unit, onEditCar: (CarDetails) -> Unit, onDeleteCar: (CarDetails) -> Unit, onFindCar: (CarDetails) -> Unit ) {
+fun CarSpotterMain(cars: List<CarDetails>, onAddCar: () -> Unit, onEditCar: (CarDetails) -> Unit, onDeleteCar: (CarDetails) -> Unit, onFindCar: () -> Unit ) {
 
     var selectedBoxId by remember { mutableStateOf<Uuid?>(null)}
     Column(
@@ -83,103 +88,106 @@ fun CarSpotterMain(cars: List<CarDetails>, onAddCar: () -> Unit, onEditCar: (Car
             textAlign = TextAlign.Center,
             fontSize = 48.sp,
             fontWeight = FontWeight.Bold,
-
+            color = Color.Black
             )
+        Column(
+            Modifier.weight(1f)
+        ){
+            LazyVerticalGrid(
+                GridCells.Fixed(2),
+                modifier = Modifier.clickable {selectedBoxId = null}
+                    .weight(1f)
+            ) {
 
-        LazyVerticalGrid(
-            GridCells.Fixed(2),
-            modifier = Modifier.weight(1f)
-                .clickable {selectedBoxId = null}
-        ) {
-
-            itemsIndexed( cars ){ index, car ->
-                Box(modifier = Modifier
-                    .height(150.dp)
-                    .padding(10.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color.LightGray)
-                    .shadow(1.dp)
-                    .border(
-                        border = BorderStroke(Dp.Hairline, Color.Black),
-                        RoundedCornerShape(12.dp)
-                    )
-                    .clickable {
-                        selectedBoxId = car.id
-                    }
-                ) {
-
-                    Column(
-                        Modifier.fillMaxSize()
+                itemsIndexed( cars ){ index, car ->
+                    Card(modifier = Modifier
+                        .height(150.dp)
+                        .padding(10.dp)
+                        .border(
+                            border = BorderStroke(Dp.Hairline, Color.Black),
+                            RoundedCornerShape(12.dp)
+                        )
+                        .clickable {
+                            selectedBoxId = car.id
+                        },
+                    shape = RoundedCornerShape(12.dp),
+                    elevation = CardDefaults.cardElevation(2.dp)
                     ) {
-                        Text(
-                            text = car.brandModel,
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(5.dp)
-                        )
-                        Text(
-                            text = car.dateSpotted.toString(),
-                            textAlign = TextAlign.Center,
-                            fontSize = 18.sp,
-                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 3.dp)
-                        )
 
-                        if(car.id == selectedBoxId) {
+                        Column(
+                            Modifier.fillMaxSize()
+                        ) {
+                            Text(
+                                text = car.brandModel,
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(5.dp),
+                            )
+                            Text(
+                                text = car.dateSpotted.toString(),
+                                textAlign = TextAlign.Center,
+                                fontSize = 18.sp,
+                                modifier = Modifier.padding(horizontal = 5.dp, vertical = 3.dp)
+                            )
 
-                            Row(
-                                horizontalArrangement = Arrangement.Center,
-                                modifier = Modifier.fillMaxWidth()
-                                    .padding(5.dp)
-                            ) {
-                                val clipboard = LocalClipboard.current
-                                val scope = rememberCoroutineScope()
+                            if(car.id == selectedBoxId) {
 
-
-                                IconButton(
-                                    onClick = {
-                                        scope.launch{
-                                            clipboard.setClipEntry(
-                                                ClipEntry(ClipData.newPlainText("Uuid", car.id.toString()))
-                                            )
-                                        }
-                                    },
-                                    modifier = Modifier.padding(5.dp)
-                                        .weight(1f)
+                                Row(
+                                    horizontalArrangement = Arrangement.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                        .padding(5.dp)
                                 ) {
-                                    Icon(
-                                        Icons.Filled.ContentPaste,
-                                        contentDescription = "Copy To Clipboard"
-                                    )
-                                }
-                                IconButton(
-                                    onClick = { onEditCar(car)},
-                                    modifier = Modifier.padding(5.dp)
-                                        .weight(1f)
-                                ) {
-                                    Icon(
-                                        Icons.Filled.Edit,
-                                        contentDescription = "Edit"
-                                    )
-                                }
-                                IconButton(
-                                    onClick = {onDeleteCar(car)},
-                                    modifier = Modifier.padding(5.dp)
-                                        .weight(1f)
-                                ) {
-                                    Icon(
-                                        Icons.Filled.Delete,
-                                        contentDescription = "Delete"
-                                    )
+                                    val clipboard = LocalClipboard.current
+                                    val scope = rememberCoroutineScope()
+
+
+                                    IconButton(
+                                        onClick = {
+                                            scope.launch{
+                                                clipboard.setClipEntry(
+                                                    ClipEntry(ClipData.newPlainText("Uuid", car.id.toString()))
+                                                )
+                                            }
+                                        },
+                                        modifier = Modifier.padding(5.dp)
+                                            .weight(1f)
+                                    ) {
+                                        Icon(
+                                            Icons.Filled.ContentPaste,
+                                            contentDescription = "Copy To Clipboard",
+                                        )
+                                    }
+                                    IconButton(
+                                        onClick = { onEditCar(car)},
+                                        modifier = Modifier.padding(5.dp)
+                                            .weight(1f)
+                                    ) {
+                                        Icon(
+                                            Icons.Filled.Edit,
+                                            contentDescription = "Edit",
+                                        )
+                                    }
+                                    IconButton(
+                                        onClick = {onDeleteCar(car)},
+                                        modifier = Modifier.padding(5.dp)
+                                            .weight(1f)
+                                    ) {
+                                        Icon(
+                                            Icons.Filled.Delete,
+                                            contentDescription = "Delete",
+                                        )
+                                    }
                                 }
                             }
                         }
+
                     }
-
                 }
-            }
 
+            }
         }
+
 
         Row(
             modifier = Modifier
@@ -197,16 +205,18 @@ fun CarSpotterMain(cars: List<CarDetails>, onAddCar: () -> Unit, onEditCar: (Car
                 Icon(
                     Icons.Filled.DirectionsCarFilled,
                     contentDescription = "Add",
+                    tint = Color.Black
                 )
             }
 
             IconButton(
-                onClick = {},
+                onClick = {onFindCar()},
                 Modifier.weight(1f)
             ) {
                 Icon(
                     Icons.Filled.Search,
                     contentDescription = "Search",
+                    tint = Color.Black
                 )
             }
 
@@ -217,6 +227,7 @@ fun CarSpotterMain(cars: List<CarDetails>, onAddCar: () -> Unit, onEditCar: (Car
                 Icon(
                     Icons.Filled.Check,
                     contentDescription = "Check",
+                    tint = Color.Black
                 )
             }
         }
