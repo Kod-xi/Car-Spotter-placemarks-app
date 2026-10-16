@@ -44,8 +44,4 @@ class CarStore : IStore {
     override fun findOne(id: Uuid): CarDetails? {
         return cars.find { p -> p.id == id }
     }
-
-    override fun getSize(): Int {
-        return cars.size
-    }
 }

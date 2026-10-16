@@ -12,7 +12,6 @@ import io.github.Kodxi.carspotterapp.ui.theme.CarSpotterAppTheme
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
-import androidx.fragment.app.FragmentManager
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
