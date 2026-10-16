@@ -1,158 +1,84 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package io.github.Kodxi.carspotterapp
 
-import android.net.http.HeaderBlock
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import io.github.Kodxi.carspotterapp.ui.theme.CarSpotterAppTheme
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.IconButton
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Create
-import androidx.compose.material3.Icon
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.unit.Dp
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.toMutableStateList
+import androidx.compose.ui.Modifier
+import androidx.fragment.app.FragmentManager
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
-@Composable
-fun CarSpotterMain(
-    onViewMarksClick: () -> Unit,
-    onAddMarkClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Top
-    ) {
-        Text(
-            text = "Car Spotter",
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color(0xFFC78EFF))
-                .padding(12.dp),
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            val navController = rememberNavController()
 
-            textAlign = TextAlign.Center,
-            fontSize = 48.sp,
-            fontWeight = FontWeight.Bold,
+            CarSpotterAppTheme {
 
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
 
-        )
-//
-//        Button(
-//            onClick = onViewMarksClick,
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(top = 24.dp)
-//        ) {
-//            Text("View Marks")
-//        }
-//
-//        Button(
-//            onClick = onAddMarkClick,
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(top = 16.dp)
-//        ) {
-//            Text("Add Mark")
-//        }
+                    val cars = remember { AppData.carStore.findAll().toMutableStateList() }
+                    NavHost(navController = navController, startDestination = "main") {
+                        composable("main") {
+                            CarSpotterMain(
+                                cars = cars,
+                                onAddCar = { navController.navigate("add") },
+                                onEditCar = { car -> navController.navigate("update/${car.id}") },
+                                onDeleteCar = { car ->
+                                    if (AppData.carStore.delete(car.id)) {
+                                        cars.remove(car)
+                                    }
 
-        LazyVerticalGrid(
-            GridCells.Fixed(2),
-            modifier = Modifier.weight(1f)
-        ) {
-            items(20) {
-                Box(modifier = Modifier
-                    .height(150.dp)
-                    .padding(10.dp)
-                    .clip(RoundedCornerShape(12.dp))
-//                    .background(Color.Red)
-                    .shadow(1.dp)
-                    .border(
-                        border = BorderStroke(Dp.Hairline, Color.Black),
-                        RoundedCornerShape(12.dp)
-                    ),
-                    contentAlignment = Alignment.Center) {
-                    Text(
-                        text = "Test",
-                        textAlign = TextAlign.Center
-                    )
+                                },
+                                onFindCar = { navController.navigate("search") }
+                            )
+                        }
+                        composable("add") {
+                            CarSpotterAdd(
+                                onSave = { car ->
+                                    AppData.carStore.create(car)
+                                    cars.add(car)
+                                    navController.navigate("main")
+                                },
+                                onReturn = { navController.navigate("main") }
+                            )
+                        }
+                        composable(
+                            "update/{carId}",
+                            arguments = listOf(navArgument("carId") { type = NavType.StringType })
+                        ) { backStackEntry ->
+                            val id = Uuid.parse(backStackEntry.arguments?.getString("carId")!!)
+                            val car = AppData.carStore.findOne(id)
+                            CarSpotterUpdate(
+                                car = car,
+                                onReturn = { navController.navigate("main") },
+                            )
+                        }
+                        composable("search") {
+                            CarSpotterSearch(
+                                onReturn = {navController.navigate("main")}
+                            )
+                        }
+                    }
                 }
             }
-
         }
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp)
-                .background(Color(0xFFC78EFF)),
-            verticalAlignment = Alignment.CenterVertically
-        ){
-            IconButton(
-                onClick = {},
-                Modifier.weight(1f)
-            ) {
-                Icon(
-                    Icons.Filled.Create,
-                    contentDescription = "Create"
-                )
-            }
-
-            IconButton(
-                onClick = {},
-                Modifier.weight(1f)
-            ) {
-                Icon(
-                    Icons.Filled.Create,
-                    contentDescription = "Create"
-                )
-            }
-
-            IconButton(
-                onClick = {},
-                Modifier.weight(1f)
-            ) {
-                Icon(
-                    Icons.Filled.Create,
-                    contentDescription = "Create"
-                )
-            }
-        }
-
-
-    }
-
-
-}
-
-@Preview(showBackground = true)
-@Composable
-fun CarSpotterMainPreview() {
-    CarSpotterAppTheme {
-        CarSpotterMain(
-            onViewMarksClick = {},
-            onAddMarkClick = {}
-        )
     }
 }

@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">Car Spotter App</string>
     <string name="title_activity_main">MainActivity</string>
+    <string name="title_activity_main_screen">MainScreen</string>
+    <string name="title_activity_edit_screen">EditScreen</string>
+    <string name="title_activity_add_screen">AddScreen</string>
+    <string name="title_activity_search_screen">SearchScreen</string>
 </resources>

@@ -13,8 +13,38 @@
         android:theme="@style/Theme.CarSpotterApp">
         <activity
             android:name=".MainActivity"
-            android:exported="false"
+            android:exported="true"
             android:label="@string/title_activity_main"
+            android:theme="@style/Theme.CarSpotterApp"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".MainScreen"
+            android:exported="false"
+            android:label="@string/title_activity_main_screen"
+            android:theme="@style/Theme.CarSpotterApp"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".EditScreen"
+            android:exported="false"
+            android:label="@string/title_activity_edit_screen"
+            android:theme="@style/Theme.CarSpotterApp"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".AddScreen"
+            android:exported="false"
+            android:label="@string/title_activity_add_screen"
+            android:theme="@style/Theme.CarSpotterApp"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".SearchScreen"
+            android:exported="false"
+            android:label="@string/title_activity_search_screen"
             android:theme="@style/Theme.CarSpotterApp"
             android:windowSoftInputMode="adjustResize" />
     </application>

@@ -7,8 +7,8 @@ import kotlin.uuid.Uuid
 interface IStore {
 
     fun findAll(): List<CarDetails>
-    fun create(placemark: CarDetails)
-    fun update(placemark: CarDetails): Boolean
+    fun create(car: CarDetails)
+    fun update(car: CarDetails): Boolean
     fun delete(id: Uuid): Boolean
     fun findOne(id: Uuid): CarDetails?
     fun getSize(): Int
