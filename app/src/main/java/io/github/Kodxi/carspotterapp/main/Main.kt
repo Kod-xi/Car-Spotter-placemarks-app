@@ -56,9 +56,11 @@ fun addCar() {
         runCatching { LocalDate.parse(it) }.getOrNull()
     }
     print("Enter X Coordinate")
-    val xVal = readlnOrNull()?.toDoubleOrNull()
+    var xVal = readlnOrNull()?.toDoubleOrNull()
+    if(xVal == null) xVal = 0.0
     print("Enter Y Coordinate")
-    val yVal = readlnOrNull()?.toDoubleOrNull()
+    var yVal = readlnOrNull()?.toDoubleOrNull()
+    if(yVal == null) yVal = 0.0
 
     if (brandModel.isNotEmpty()) {
         val car = CarDetails(brandModel = brandModel, description = description, dateSpotted = dateSpotted, x = xVal, y = yVal)
@@ -98,6 +100,11 @@ fun updateCar() {
     print("Edit Brand / Model: ")
     val brandModel = readlnOrNull()?.trim().orEmpty()
 
+    if (brandModel.isEmpty()) {
+        println("Cancelling, Brand / Model Was Empty")
+        return
+    }
+
     print("Edit Description: ")
     val description = readlnOrNull()?.trim().orEmpty()
 
@@ -106,16 +113,15 @@ fun updateCar() {
         runCatching { LocalDate.parse(it) }.getOrNull()
     }
     print("Edit X Coordinate")
-    val xVal = readlnOrNull()?.toDoubleOrNull()
-    print("Edit Y Coordinate")
-    val yVal = readlnOrNull()?.toDoubleOrNull()
+    var xVal = readlnOrNull()?.toDoubleOrNull()
+    if(xVal == null) xVal = 0.0
+    print("Enter Y Coordinate")
+    var yVal = readlnOrNull()?.toDoubleOrNull()
+    if(yVal == null) yVal = 0.0
 
-    if (brandModel.isEmpty()) {
-        println("Cancelling, Brand / Model Was Empty")
-        return
-    }
 
-    if (carStore.update(CarDetails(id, brandModel, description, dateSpotted, xVal, yVal))) {
+
+    if (carStore.update(CarDetails(id, brandModel, description, dateSpotted, null, xVal, yVal))) {
         println("Car Updated Successfully")
     } else {
         println("Failed To Update Car")

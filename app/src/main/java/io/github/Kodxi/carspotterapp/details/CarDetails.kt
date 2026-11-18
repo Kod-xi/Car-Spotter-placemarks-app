@@ -12,6 +12,20 @@ data class CarDetails(
     var brandModel: String = "",
     var description: String = "",
     var dateSpotted: LocalDate? = Clock.System.todayIn(TimeZone.currentSystemDefault()),
-    var x: Double? = 0.0,
-    var y: Double? = 0.0
-)
+    var imageUri: String? = null,
+    var x: Double = 0.0,
+    var y: Double = 0.0
+){
+    fun validate() {
+        require(brandModel.isNotBlank()){
+            "Model must not be empty"
+        }
+        require(x.isFinite() && x in -90.0..90.0){
+
+        }
+
+        require(y.isFinite() && y in -90.0..90.0){
+            "Longitude must be between -180 and 180."
+        }
+    }
+}
