@@ -3,6 +3,7 @@
 package io.github.Kodxi.carspotterapp
 
 
+import android.widget.ImageView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -53,6 +54,21 @@ import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.res.painterResource
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.DisplayMode
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import coil3.compose.AsyncImage
 
 @Composable
 fun CarSpotterUpdate(car: CarDetails?, onReturn: () -> Unit ) {
@@ -76,9 +92,27 @@ fun CarSpotterUpdate(car: CarDetails?, onReturn: () -> Unit ) {
         val brandModelState = rememberTextFieldState(initialText = car?.brandModel ?: "")
         val descriptionState = rememberTextFieldState(initialText = car?.description ?: "")
         val datePickerState = rememberDatePickerState(
-            initialSelectedDate = car?.dateSpotted?.toJavaLocalDate() ?:
-                Clock.System.todayIn(TimeZone.currentSystemDefault()).toJavaLocalDate(),
+            initialSelectedDate = Clock.System.todayIn(TimeZone.currentSystemDefault()).toJavaLocalDate(),
+            initialDisplayMode = DisplayMode.Input
         )
+        var imageUri by rememberSaveable { mutableStateOf<Uri?>(car?.imageUri?.let { Uri.parse(it)}) }
+        val contentResolver = LocalContext.current.contentResolver
+        val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+            if (uri != null) {
+                // Keep access to the document URI for later use, when supported.
+                try {
+                    contentResolver.takePersistableUriPermission(
+                        uri,
+                        android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
+                } catch (_: SecurityException) {
+                    // Some providers may not grant persistable access.
+                }
+
+                imageUri = uri
+            }
+        }
+
         val xCoordState = rememberTextFieldState(initialText = car?.x.toString())
         val yCoordState = rememberTextFieldState(initialText = car?.y.toString())
 
@@ -140,15 +174,42 @@ fun CarSpotterUpdate(car: CarDetails?, onReturn: () -> Unit ) {
                     state = datePickerState,
                     showModeToggle = true,
                     modifier = Modifier.padding(bottom = 5.dp)
+                        .padding(bottom = 5.dp)
                         .clip(RoundedCornerShape(28.dp)),
                 )
 
                 Text(
-                    text = "${datePickerState.getSelectedDate()}",
+                    text = "Photo of Car",
                     modifier = Modifier.padding(bottom = 5.dp),
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold
                 )
+
+                if(imageUri != null){
+                    AsyncImage(
+                        model = imageUri,
+                        contentDescription = "Image of the spotted car.",
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.fillMaxWidth()
+                            .height(180.dp)
+                            .clickable{
+                                picker.launch(arrayOf("image/*"))
+                            }
+                    )
+                }
+                else{
+                    Image(
+                        painterResource(android.R.drawable.ic_menu_gallery),
+                        contentDescription = "No image provided yet.",
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.fillMaxWidth()
+                            .height(180.dp)
+                            .clickable{
+                                picker.launch(arrayOf("image/*"))
+                            }
+                    )
+                }
+
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically
@@ -211,6 +272,7 @@ fun CarSpotterUpdate(car: CarDetails?, onReturn: () -> Unit ) {
                         brandModel = brandModelState.text.toString(),
                         description = descriptionState.text.toString(),
                         dateSpotted = datePickerState.getSelectedDate()?.toKotlinLocalDate(),
+                        imageUri = imageUri?.toString(),
                         x = xCoordState.text.toString().toDoubleOrNull() ?: 0.0,
                         y = yCoordState.text.toString().toDoubleOrNull() ?: 0.0
                     )

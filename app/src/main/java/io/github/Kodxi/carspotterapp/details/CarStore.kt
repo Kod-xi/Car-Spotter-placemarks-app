@@ -23,6 +23,7 @@ class CarStore : IStore {
             foundCar.brandModel = car.brandModel
             foundCar.description = car.description
             foundCar.dateSpotted = car.dateSpotted
+            foundCar.imageUri = car.imageUri
             foundCar.x = car.x
             foundCar.y = car.y
             true

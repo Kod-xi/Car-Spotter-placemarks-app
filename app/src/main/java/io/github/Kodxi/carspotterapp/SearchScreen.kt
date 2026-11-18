@@ -2,7 +2,10 @@
 
 package io.github.Kodxi.carspotterapp
 
+import android.net.Uri
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,10 +28,15 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -38,10 +46,13 @@ import androidx.compose.ui.unit.sp
 import io.github.Kodxi.carspotterapp.ui.theme.CarSpotterAppTheme
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
+import androidx.core.net.toUri
+import coil3.compose.AsyncImage
 
 @Composable
 fun CarSpotterSearch(onReturn: () -> Unit){
-    Column(modifier = Modifier.fillMaxSize(),
+    Column(
+        modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Top,
     ) {
         Text(
@@ -141,6 +152,34 @@ fun CarSpotterSearch(onReturn: () -> Unit){
                             modifier = Modifier.padding(bottom = 5.dp),
                             fontSize = 24.sp
                         )
+
+                        Text(
+                            text = "Photo of Car",
+                            modifier = Modifier.padding(bottom = 5.dp),
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        var imageUri by rememberSaveable { mutableStateOf<Uri?>(car.imageUri?.toUri()) }
+
+                        if(imageUri != null){
+                            AsyncImage(
+                                model = imageUri,
+                                contentDescription = "Image of the spotted car.",
+                                contentScale = ContentScale.Fit,
+                                modifier = Modifier.fillMaxWidth()
+                                    .height(180.dp)
+                            )
+                        }
+                        else{
+                            Image(
+                                painterResource(android.R.drawable.ic_menu_gallery),
+                                contentDescription = "No image provided yet.",
+                                contentScale = ContentScale.Fit,
+                                modifier = Modifier.fillMaxWidth()
+                                    .height(180.dp)
+                            )
+                        }
 
                         Text(
                             text = "Coordinates",

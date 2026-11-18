@@ -1,7 +1,9 @@
-@file:OptIn(ExperimentalUuidApi::class, ExperimentalMaterial3Api::class, ExperimentalTime::class)
+@file:
+OptIn(ExperimentalUuidApi::class, ExperimentalMaterial3Api::class, ExperimentalTime::class)
 
 package io.github.Kodxi.carspotterapp
 
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,7 +24,6 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,10 +33,15 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.getSelectedDate
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -53,6 +59,21 @@ import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.res.painterResource
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.DisplayMode
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import coil3.compose.AsyncImage
 
 
 
@@ -81,6 +102,23 @@ fun CarSpotterAdd(onSave: (CarDetails) -> Unit, onReturn: () -> Unit) {
             initialSelectedDate = Clock.System.todayIn(TimeZone.currentSystemDefault()).toJavaLocalDate(),
             initialDisplayMode = DisplayMode.Input
         )
+        var imageUri by rememberSaveable { mutableStateOf<Uri?>(null) }
+        val contentResolver = LocalContext.current.contentResolver
+        val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+            if (uri != null) {
+                // Keep access to the document URI for later use, when supported.
+                try {
+                    contentResolver.takePersistableUriPermission(
+                        uri,
+                        android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
+                } catch (_: SecurityException) {
+                    // Some providers may not grant persistable access.
+                }
+
+                imageUri = uri
+            }
+        }
         val xCoordState = rememberTextFieldState(initialText = "")
         val yCoordState = rememberTextFieldState(initialText = "")
 
@@ -146,6 +184,38 @@ fun CarSpotterAdd(onSave: (CarDetails) -> Unit, onReturn: () -> Unit) {
                         .padding(bottom = 5.dp)
                         .clip(RoundedCornerShape(28.dp)),
                 )
+
+                Text(
+                    text = "Photo of Car",
+                    modifier = Modifier.padding(bottom = 5.dp),
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
+                if(imageUri != null){
+                    AsyncImage(
+                        model = imageUri,
+                        contentDescription = "Image of the spotted car.",
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.fillMaxWidth()
+                            .height(180.dp)
+                            .clickable{
+                                picker.launch(arrayOf("image/*"))
+                            }
+                    )
+                }
+                else{
+                    Image(
+                        painterResource(android.R.drawable.ic_menu_gallery),
+                        contentDescription = "No image provided yet.",
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.fillMaxWidth()
+                            .height(180.dp)
+                            .clickable{
+                                picker.launch(arrayOf("image/*"))
+                            }
+                    )
+                }
 
                 Text(
                     text = "Location",
@@ -215,6 +285,7 @@ fun CarSpotterAdd(onSave: (CarDetails) -> Unit, onReturn: () -> Unit) {
                         brandModel = brandModelState.text.toString(),
                         description = descriptionState.text.toString(),
                         dateSpotted = datePickerState.getSelectedDate()?.toKotlinLocalDate(),
+                        imageUri = imageUri?.toString(),
                         x = xCoordState.text.toString().toDoubleOrNull() ?: 0.0,
                         y = yCoordState.text.toString().toDoubleOrNull() ?: 0.0
                     )

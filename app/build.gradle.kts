@@ -50,6 +50,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.8.0")
     implementation("androidx.compose.material:material-icons-extended")
     implementation("com.jakewharton.timber:timber:5.0.1")
+    implementation("io.coil-kt.coil3:coil-compose:3.6.3")
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
