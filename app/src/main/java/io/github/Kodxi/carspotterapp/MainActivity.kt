@@ -5,6 +5,7 @@ package io.github.Kodxi.carspotterapp
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -17,12 +18,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import timber.log.Timber
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        Timber.plant(Timber.DebugTree())
         setContent {
             val navController = rememberNavController()
 
@@ -38,15 +42,25 @@ class MainActivity : ComponentActivity() {
                         composable("main") {
                             CarSpotterMain(
                                 cars = cars,
-                                onAddCar = { navController.navigate("add") },
-                                onEditCar = { car -> navController.navigate("update/${car.id}") },
+                                onAddCar = {
+                                    Timber.d("Navigating To Add")
+                                    navController.navigate("add")
+                                },
+                                onEditCar = { car ->
+                                    navController.navigate("update/${car.id}")
+                                    Timber.d("Navigating To Edit")
+
+                                },
                                 onDeleteCar = { car ->
                                     if (AppData.carStore.delete(car.id)) {
                                         cars.remove(car)
                                     }
 
                                 },
-                                onFindCar = { navController.navigate("search") }
+                                onFindCar = {
+                                    Timber.d("Navigating To Search")
+                                    navController.navigate("search")
+                                }
                             )
                         }
                         composable("add") {
@@ -54,9 +68,13 @@ class MainActivity : ComponentActivity() {
                                 onSave = { car ->
                                     AppData.carStore.create(car)
                                     cars.add(car)
+                                    Timber.d("Adding New Car; id=${car.id}, title=${car.brandModel}; \nNavigating To Main")
                                     navController.navigate("main")
                                 },
-                                onReturn = { navController.navigate("main") }
+                                onReturn = {
+                                    Timber.d("No New Car Added; \nNavigating To Main")
+                                    navController.navigate("main")
+                                }
                             )
                         }
                         composable(
@@ -67,12 +85,18 @@ class MainActivity : ComponentActivity() {
                             val car = AppData.carStore.findOne(id)
                             CarSpotterUpdate(
                                 car = car,
-                                onReturn = { navController.navigate("main") },
+                                onReturn = {
+                                    Timber.d("Navigating To Main")
+                                    navController.navigate("main")
+                                },
                             )
                         }
                         composable("search") {
                             CarSpotterSearch(
-                                onReturn = {navController.navigate("main")}
+                                onReturn = {
+                                    Timber.d("Navigating To Main")
+                                    navController.navigate("main")
+                                }
                             )
                         }
                     }
