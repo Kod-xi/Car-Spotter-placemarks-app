@@ -2,6 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -47,6 +51,11 @@
             android:label="@string/title_activity_search_screen"
             android:theme="@style/Theme.CarSpotterApp"
             android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".MapScreen"
+            android:exported="false"
+            android:label="@string/title_activity_map_screen"
+            android:theme="@style/Theme.CarSpotterApp"
+            android:windowSoftInputMode="adjustResize" />
     </application>
-
 </manifest>
