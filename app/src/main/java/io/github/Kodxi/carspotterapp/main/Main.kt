@@ -8,9 +8,10 @@ package io.github.Kodxi.carspotterapp.main
 import io.github.Kodxi.carspotterapp.details.CarDetails
 import io.github.Kodxi.carspotterapp.details.CarStore
 import kotlinx.datetime.LocalDate
+import java.io.File
 import kotlin.uuid.Uuid
 
-val carStore = CarStore()
+val carStore = CarStore(File("cars.json"))
 
 fun main() {
     var input: Int

@@ -36,6 +36,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         Timber.plant(Timber.DebugTree())
+        AppData.initialize(this)
+        Timber.d("App Initialized")
         setContent {
             val navController = rememberNavController()
             val context = LocalContext.current;
