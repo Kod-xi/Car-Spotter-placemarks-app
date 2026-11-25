@@ -68,252 +68,324 @@ import androidx.compose.ui.res.painterResource
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material3.DisplayMode
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import coil3.compose.AsyncImage
-
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import timber.log.Timber
 
 
 @Composable
-fun CarSpotterAdd(onSave: (CarDetails) -> Unit, onReturn: () -> Unit) {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Top
-    ) {
-        Text(
-            text = "Add Car",
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color(0xFFC78EFF))
-                .padding(12.dp),
+fun CarSpotterAdd(onSave: (CarDetails) -> Unit, onReturn: () -> Unit, hasLocationPermission: Boolean, onRequestLocation: () -> Unit) {
 
-            textAlign = TextAlign.Center,
-            fontSize = 48.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black
-        )
-
-        val brandModelState = rememberTextFieldState(initialText = "")
-        val descriptionState = rememberTextFieldState(initialText = "")
-        val datePickerState = rememberDatePickerState(
-            initialSelectedDate = Clock.System.todayIn(TimeZone.currentSystemDefault()).toJavaLocalDate(),
-            initialDisplayMode = DisplayMode.Input
-        )
-        var imageUri by rememberSaveable { mutableStateOf<Uri?>(null) }
-        val contentResolver = LocalContext.current.contentResolver
-        val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
-            if (uri != null) {
-                // Keep access to the document URI for later use, when supported.
-                try {
-                    contentResolver.takePersistableUriPermission(
-                        uri,
-                        android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
-                    )
-                } catch (_: SecurityException) {
-                    // Some providers may not grant persistable access.
-                }
-
-                imageUri = uri
+    val brandModelState = rememberTextFieldState(initialText = "")
+    val descriptionState = rememberTextFieldState(initialText = "")
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDate = Clock.System.todayIn(TimeZone.currentSystemDefault()).toJavaLocalDate(),
+        initialDisplayMode = DisplayMode.Input
+    )
+    var imageUri by rememberSaveable { mutableStateOf<Uri?>(null) }
+    val context = LocalContext.current
+    val contentResolver = context.contentResolver
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+        if (uri != null) {
+            // Keep access to the document URI for later use, when supported.
+            try {
+                contentResolver.takePersistableUriPermission(
+                    uri,
+                    android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            } catch (_: SecurityException) {
+                // Some providers may not grant persistable access.
             }
+
+            imageUri = uri
         }
-        val xCoordState = rememberTextFieldState(initialText = "")
-        val yCoordState = rememberTextFieldState(initialText = "")
+    }
+    val xCoordState = rememberTextFieldState(initialText = "")
+    val yCoordState = rememberTextFieldState(initialText = "")
 
-        Card(
-            Modifier.weight(1f)
-                .padding(5.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(MaterialTheme.colorScheme.background),
-            elevation = CardDefaults.cardElevation(2.dp)
-        ){
-            Column(
+    var showMap by remember {
+        mutableStateOf(false)
+    }
+
+    var deviceLocation by remember { mutableStateOf<Pair<Double, Double>?>(null) }
+
+    LaunchedEffect(hasLocationPermission){
+        if(hasLocationPermission){
+            try{
+                val client = LocationServices.getFusedLocationProviderClient(context)
+                client.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
+                    .addOnSuccessListener { location ->
+                        if(location != null){
+                            deviceLocation = Pair(location.latitude, location.longitude)
+                        }
+                        else{
+                            Timber.d("Location is null")
+                        }
+                    }
+            } catch (e: SecurityException){
+                Timber.d("Location Permission Denied")
+            }
+
+        }
+    }
+
+    if(!showMap){
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Top
+        ) {
+            Text(
+                text = "Add Car",
                 modifier = Modifier
-                    .padding(10.dp)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                Text(
-                    text = "Brand / Model",
-                    modifier = Modifier.padding(bottom = 5.dp),
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                    .fillMaxWidth()
+                    .background(Color(0xFFC78EFF))
+                    .padding(12.dp),
 
-                TextField(
-                    state = brandModelState,
-                    modifier = Modifier.padding(bottom = 5.dp),
-                    lineLimits = TextFieldLineLimits.SingleLine,
-                    textStyle =
-                        TextStyle(
-                            fontSize = 22.sp,
-                        ),
-                    shape = RoundedCornerShape(48.dp)
-                )
+                textAlign = TextAlign.Center,
+                fontSize = 48.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
 
-                Text(
-                    text = "Description",
-                    modifier = Modifier.padding(bottom = 5.dp),
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold
-                )
 
-                TextField(
-                    state = descriptionState,
-                    modifier = Modifier.padding(bottom = 5.dp),
-                    lineLimits = TextFieldLineLimits.Default,
-                    textStyle =
-                        TextStyle(
-                            fontSize = 22.sp,
-                        ),
-                    shape = RoundedCornerShape(48.dp)
-                )
 
-                Text(
-                    text = "Date Spotted",
-                    modifier = Modifier.padding(bottom = 5.dp),
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold
-                )
-
-                DatePicker(
-                    state = datePickerState,
-                    showModeToggle = true,
+            Card(
+                Modifier.weight(1f)
+                    .padding(5.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(MaterialTheme.colorScheme.background),
+                elevation = CardDefaults.cardElevation(2.dp)
+            ){
+                Column(
                     modifier = Modifier
-                        .padding(bottom = 5.dp)
-                        .clip(RoundedCornerShape(28.dp)),
-                )
-
-                Text(
-                    text = "Photo of Car",
-                    modifier = Modifier.padding(bottom = 5.dp),
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold
-                )
-
-                if(imageUri != null){
-                    AsyncImage(
-                        model = imageUri,
-                        contentDescription = "Image of the spotted car.",
-                        contentScale = ContentScale.Fit,
-                        modifier = Modifier.fillMaxWidth()
-                            .height(180.dp)
-                            .clickable{
-                                picker.launch(arrayOf("image/*"))
-                            }
-                    )
-                }
-                else{
-                    Image(
-                        painterResource(android.R.drawable.ic_menu_gallery),
-                        contentDescription = "No image provided yet.",
-                        contentScale = ContentScale.Fit,
-                        modifier = Modifier.fillMaxWidth()
-                            .height(180.dp)
-                            .clickable{
-                                picker.launch(arrayOf("image/*"))
-                            }
-                    )
-                }
-
-                Text(
-                    text = "Location",
-                    modifier = Modifier.padding(bottom = 5.dp),
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(10.dp)
+                        .verticalScroll(rememberScrollState())
                 ) {
                     Text(
-                        text = "X:",
-                        modifier = Modifier.padding(bottom = 5.dp, end = 5.dp),
+                        text = "Brand / Model",
+                        modifier = Modifier.padding(bottom = 5.dp),
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold
                     )
 
                     TextField(
-                        state = xCoordState,
-                        modifier = Modifier.padding(bottom = 5.dp, end = 5.dp)
-                            .weight(2f),
+                        state = brandModelState,
+                        modifier = Modifier.padding(bottom = 5.dp),
                         lineLimits = TextFieldLineLimits.SingleLine,
                         textStyle =
                             TextStyle(
                                 fontSize = 22.sp,
                             ),
-                        shape = RoundedCornerShape(48.dp),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                        shape = RoundedCornerShape(48.dp)
                     )
 
                     Text(
-                        text = "Y:",
-                        modifier = Modifier.padding(bottom = 5.dp, end = 5.dp),
+                        text = "Description",
+                        modifier = Modifier.padding(bottom = 5.dp),
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold
                     )
 
                     TextField(
-                        state = yCoordState,
-                        modifier = Modifier.padding(bottom = 5.dp, end = 5.dp)
-                            .weight(2f),
-                        lineLimits = TextFieldLineLimits.SingleLine,
+                        state = descriptionState,
+                        modifier = Modifier.padding(bottom = 5.dp),
+                        lineLimits = TextFieldLineLimits.Default,
                         textStyle =
                             TextStyle(
                                 fontSize = 22.sp,
                             ),
-                        shape = RoundedCornerShape(48.dp),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                        shape = RoundedCornerShape(48.dp)
                     )
+
+                    Text(
+                        text = "Date Spotted",
+                        modifier = Modifier.padding(bottom = 5.dp),
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    DatePicker(
+                        state = datePickerState,
+                        showModeToggle = true,
+                        modifier = Modifier
+                            .padding(bottom = 5.dp)
+                            .clip(RoundedCornerShape(28.dp)),
+                    )
+
+                    Text(
+                        text = "Photo of Car",
+                        modifier = Modifier.padding(bottom = 5.dp),
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    if(imageUri != null){
+                        AsyncImage(
+                            model = imageUri,
+                            contentDescription = "Image of the spotted car.",
+                            contentScale = ContentScale.Fit,
+                            modifier = Modifier.fillMaxWidth()
+                                .height(180.dp)
+                                .clickable{
+                                    picker.launch(arrayOf("image/*"))
+                                }
+                        )
+                    }
+                    else{
+                        Image(
+                            painterResource(android.R.drawable.ic_menu_gallery),
+                            contentDescription = "No image provided yet.",
+                            contentScale = ContentScale.Fit,
+                            modifier = Modifier.fillMaxWidth()
+                                .height(180.dp)
+                                .clickable{
+                                    picker.launch(arrayOf("image/*"))
+                                }
+                        )
+                    }
+
+                    Text(
+                        text = "Location",
+                        modifier = Modifier.padding(bottom = 5.dp),
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "X:",
+                            modifier = Modifier.padding(bottom = 5.dp, end = 5.dp),
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        TextField(
+                            state = xCoordState,
+                            modifier = Modifier.padding(bottom = 5.dp, end = 5.dp)
+                                .weight(2f),
+                            lineLimits = TextFieldLineLimits.SingleLine,
+                            textStyle =
+                                TextStyle(
+                                    fontSize = 22.sp,
+                                ),
+                            shape = RoundedCornerShape(48.dp),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                        )
+
+                        Text(
+                            text = "Y:",
+                            modifier = Modifier.padding(bottom = 5.dp, end = 5.dp),
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        TextField(
+                            state = yCoordState,
+                            modifier = Modifier.padding(bottom = 5.dp, end = 5.dp)
+                                .weight(2f),
+                            lineLimits = TextFieldLineLimits.SingleLine,
+                            textStyle =
+                                TextStyle(
+                                    fontSize = 22.sp,
+                                ),
+                            shape = RoundedCornerShape(48.dp),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                        )
+
+                        IconButton(
+                            onClick = {
+                                if(!hasLocationPermission){
+                                    onRequestLocation()
+                                }
+                                showMap = true;
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Map,
+                                contentDescription = "Map"
+                            )
+                        }
+
+                    }
+
+
+
                 }
 
             }
 
-        }
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp)
-                .background(Color(0xFFC78EFF)),
-            verticalAlignment = Alignment.CenterVertically
-        ){
-            IconButton(
-                onClick = {
-                    val newCar = CarDetails(
-                        brandModel = brandModelState.text.toString(),
-                        description = descriptionState.text.toString(),
-                        dateSpotted = datePickerState.getSelectedDate()?.toKotlinLocalDate(),
-                        imageUri = imageUri?.toString(),
-                        x = xCoordState.text.toString().toDoubleOrNull() ?: 0.0,
-                        y = yCoordState.text.toString().toDoubleOrNull() ?: 0.0
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(60.dp)
+                    .background(Color(0xFFC78EFF)),
+                verticalAlignment = Alignment.CenterVertically
+            ){
+                IconButton(
+                    onClick = {
+                        val newCar = CarDetails(
+                            brandModel = brandModelState.text.toString(),
+                            description = descriptionState.text.toString(),
+                            dateSpotted = datePickerState.getSelectedDate()?.toKotlinLocalDate(),
+                            imageUri = imageUri?.toString(),
+                            x = xCoordState.text.toString().toDoubleOrNull() ?: 0.0,
+                            y = yCoordState.text.toString().toDoubleOrNull() ?: 0.0
+                        )
+                        onSave(newCar)
+                    },
+                    Modifier.weight(1f)
+                ) {
+                    Icon(
+                        Icons.Filled.Check,
+                        contentDescription = "Check",
+                        tint = Color.Black
                     )
-                    onSave(newCar)
-                },
-                Modifier.weight(1f)
-            ) {
-                Icon(
-                    Icons.Filled.Check,
-                    contentDescription = "Check",
-                    tint = Color.Black
-                )
-            }
+                }
 
-            IconButton(
-                onClick = {
-                    onReturn()
-                },
-                Modifier.weight(1f)
-            ) {
-                Icon(
-                    Icons.Filled.Clear,
-                    contentDescription = "Clear",
-                    tint = Color.Black
-                )
+                IconButton(
+                    onClick = {
+                        onReturn()
+                    },
+                    Modifier.weight(1f)
+                ) {
+                    Icon(
+                        Icons.Filled.Clear,
+                        contentDescription = "Clear",
+                        tint = Color.Black
+                    )
+                }
             }
         }
     }
+    else {
+        val startLat = xCoordState.text.toString().toDoubleOrNull() ?: deviceLocation?.first ?: 53.35
+        val startLon = yCoordState.text.toString().toDoubleOrNull() ?: deviceLocation?.second ?: -6.25
+
+        MapPicker(
+            startLat = startLat,
+            startLon = startLon,
+            onConfirm = { lat, lon ->
+                xCoordState.setTextAndPlaceCursorAtEnd(lat.toString())
+                yCoordState.setTextAndPlaceCursorAtEnd(lon.toString())
+                showMap = false
+            },
+            onCancel = { showMap = false }
+        )
+    }
+
+
 }
 
 @Preview(showBackground = true)
@@ -322,7 +394,9 @@ fun GreetingPreview2() {
     CarSpotterAppTheme {
         CarSpotterAdd(
             onSave = {},
-            onReturn = {}
+            onReturn = {},
+            false,
+            {}
         )
     }
 }
